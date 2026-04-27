@@ -870,16 +870,24 @@ void ConfigManipulation::toggle_print_fff_options(DynamicPrintConfig *config, co
 
     // Get the current fuzzy skin state
     bool has_fuzzy_skin = config->opt_enum<FuzzySkinType>("fuzzy_skin") != FuzzySkinType::Disabled_fuzzy;
-    
+
     // Show fuzzy skin options when fuzzy skin is not disabled
-    for (auto el : {"fuzzy_skin_mode", "fuzzy_skin_noise_type", "fuzzy_skin_point_distance", "fuzzy_skin_thickness", "fuzzy_skin_first_layer"})
+    for (auto el :
+         {"fuzzy_skin_mode", "fuzzy_skin_noise_type", "fuzzy_skin_point_distance", "fuzzy_skin_thickness", "fuzzy_skin_first_layer"})
         toggle_line(el, has_fuzzy_skin);
-    
+
     // Show noise type specific options with the same logic
-    NoiseType fuzzy_skin_noise_type = config->opt_enum<NoiseType>("fuzzy_skin_noise_type");
-    toggle_line("fuzzy_skin_scale", fuzzy_skin_noise_type != NoiseType::Classic && has_fuzzy_skin);
-    toggle_line("fuzzy_skin_octaves", fuzzy_skin_noise_type != NoiseType::Classic && fuzzy_skin_noise_type != NoiseType::Voronoi && has_fuzzy_skin);
-    toggle_line("fuzzy_skin_persistence", (fuzzy_skin_noise_type == NoiseType::Perlin || fuzzy_skin_noise_type == NoiseType::Billow) && has_fuzzy_skin);
+    NoiseType  fuzzy_skin_noise_type = config->opt_enum<NoiseType>("fuzzy_skin_noise_type");
+    const bool is_ripple             = fuzzy_skin_noise_type == NoiseType::Ripple;
+    toggle_line("fuzzy_skin_scale", !is_ripple && fuzzy_skin_noise_type != NoiseType::Classic && has_fuzzy_skin);
+    toggle_line("fuzzy_skin_octaves",
+                !is_ripple && fuzzy_skin_noise_type != NoiseType::Classic && fuzzy_skin_noise_type != NoiseType::Voronoi && has_fuzzy_skin);
+    toggle_line("fuzzy_skin_persistence",
+                !is_ripple && (fuzzy_skin_noise_type == NoiseType::Perlin || fuzzy_skin_noise_type == NoiseType::Billow) && has_fuzzy_skin);
+    // Ripple-specific layer offset controls — only visible when Zigzag is selected
+    toggle_line("fuzzy_skin_ripples_per_layer", is_ripple && has_fuzzy_skin);
+    toggle_line("fuzzy_skin_ripple_offset", is_ripple && has_fuzzy_skin);
+    toggle_line("fuzzy_skin_layers_between_ripple_offset", is_ripple && has_fuzzy_skin);
 
     bool have_arachne = config->opt_enum<PerimeterGeneratorType>("wall_generator") == PerimeterGeneratorType::Arachne;
     for (auto el : {"wall_transition_length", "wall_transition_filter_deviation", "wall_transition_angle", "min_feature_size", "min_length_factor",

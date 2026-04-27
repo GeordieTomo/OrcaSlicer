@@ -21,18 +21,25 @@ struct FuzzySkinConfig
     int           noise_octaves;
     double        noise_persistence;
     FuzzySkinMode mode;
+    CornerType    corner_type;
+    // Zigzag-specific parameters (hashed/compared so they affect region grouping)
+    int           ripples_per_layer; 
+    double        ripple_offset;  // mm shift per layer-period along path
+    int           layers_between_ripple_offset; // apply shift every N layers (1 = every layer)
+    // Info variables (NOT part of hash/equality — derived at construction time)
+    coord_t wall_width;   // info variable
+    coord_t minimal_line; // info variable
+    int     layer_id;     // info variable — used to compute zigzag phase
 
     bool operator==(const FuzzySkinConfig& r) const
     {
-        return type == r.type
-            && thickness == r.thickness
-            && point_distance == r.point_distance
-            && fuzzy_first_layer == r.fuzzy_first_layer
-            && noise_type == r.noise_type
-            && noise_scale == r.noise_scale
-            && noise_octaves == r.noise_octaves
-            && noise_persistence == r.noise_persistence
-            && mode == r.mode;
+        return type == r.type && thickness == r.thickness && point_distance == r.point_distance &&
+               fuzzy_first_layer == r.fuzzy_first_layer && noise_type == r.noise_type && noise_scale == r.noise_scale &&
+               noise_octaves == r.noise_octaves && noise_persistence == r.noise_persistence && mode == r.mode &&
+               corner_type == r.corner_type && ripples_per_layer == r.ripples_per_layer && ripple_offset == r.ripple_offset && 
+               layers_between_ripple_offset == r.layers_between_ripple_offset;
+        // NOTE: wall_width, minimal_line, and layer_id are intentionally excluded —
+        // they are info/derived variables and do not affect region grouping.
     }
 
     bool operator!=(const FuzzySkinConfig& r) const { return !(*this == r); }
@@ -52,6 +59,12 @@ template<> struct hash<Slic3r::FuzzySkinConfig>
         boost::hash_combine(seed, std::hash<double>{}(c.noise_scale));
         boost::hash_combine(seed, std::hash<int>{}(c.noise_octaves));
         boost::hash_combine(seed, std::hash<double>{}(c.noise_persistence));
+        boost::hash_combine(seed, std::hash<Slic3r::FuzzySkinMode>{}(c.mode));
+        boost::hash_combine(seed, std::hash<Slic3r::CornerType>{}(c.corner_type));
+        boost::hash_combine(seed, std::hash<int>{}(c.ripples_per_layer));
+        boost::hash_combine(seed, std::hash<double>{}(c.ripple_offset));
+        boost::hash_combine(seed, std::hash<int>{}(c.layers_between_ripple_offset));
+        // wall_width, minimal_line, and layer_id are intentionally excluded from hash
         return seed;
     }
 };
