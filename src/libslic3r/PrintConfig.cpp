@@ -3369,7 +3369,7 @@ void PrintConfigDef::init_fff_params()
     def->tooltip = L("The width within which to jitter. It's advised to be below outer wall line width.");
     def->sidetext = L("mm");	// millimeters, CIS languages need translation
     def->min = 0;
-    def->max = 1;
+    def->max = 2;
     def->mode = comSimple;
     def->set_default_value(new ConfigOptionFloat(0.2));
 
